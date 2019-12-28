@@ -12,7 +12,7 @@ char_info_t hyperdisplayDefaultCharacter; // The default character to use
 
 #if HYPERDISPLAY_USE_PRINT
    #if HYPERDISPLAY_INCLUDE_DEFAULT_FONT
-      #if __has_include ( <avr/pgmspace.h> )
+     #if defined(__has_include) &&  __has_include ( <avr/pgmspace.h> ) || defined NRF52840_XXAA
          hd_font_extent_t hyperdisplayDefaultXloc[HYPERDISPLAY_DEFAULT_FONT_WIDTH*HYPERDISPLAY_DEFAULT_FONT_HEIGHT];
          hd_font_extent_t hyperdisplayDefaultYloc[HYPERDISPLAY_DEFAULT_FONT_WIDTH*HYPERDISPLAY_DEFAULT_FONT_HEIGHT];
       #endif /* __has_include( <avr/pgmspace.h> ) */
@@ -238,8 +238,8 @@ void    hyperdisplay::swpixel( hd_extent_t x0, hd_extent_t y0, color_t data, hd_
     startColorOffset = getNewColorOffset(colorCycleLength, startColorOffset, 0); // This line is needed to condition the user's input start color offset because it could be greater than the cycle length
     color_t value = getOffsetColor(data, startColorOffset);
 
-    hd_hw_extent_t x0w = (hd_hw_extent_t)x0; // Cast to hw extent type to be sure of integer values
-    hd_hw_extent_t y0w = (hd_hw_extent_t)y0;
+    // hd_hw_extent_t x0w = (hd_hw_extent_t)x0; // Cast to hw extent type to be sure of integer values
+    // hd_hw_extent_t y0w = (hd_hw_extent_t)y0;
 
     hd_pixels_t pixOffst = wToPix(pCurrentWindow, x0, y0);         // It was already ensured that this will be in range
     color_t dest = getOffsetColor(pCurrentWindow->data, pixOffst); // Rely on the user's definition of a pixel's width in memory
@@ -677,7 +677,7 @@ int hyperdisplay::setWindowMemory(wind_info_t * wind, color_t data, hd_pixels_t 
     return 0; // Good!
 }
 
-int hyperdisplay::setCurrentWindowMemory( color_t data, hd_pixels_t numPixels, uint8_t bpp, bool allowDynamic)
+void hyperdisplay::setCurrentWindowMemory( color_t data, hd_pixels_t numPixels, uint8_t bpp, bool allowDynamic)
 {
     setWindowMemory(pCurrentWindow, data, numPixels, bpp, allowDynamic);
 }
@@ -753,7 +753,7 @@ void hyperdisplay::show( wind_info_t * wind ){ // Outputs the current window's b
         return numWritten;
     }
     #if HYPERDISPLAY_INCLUDE_DEFAULT_FONT
-        #if __has_include ( <avr/pgmspace.h> )
+        #if __has_include ( <avr/pgmspace.h> ) || defined NRF52840_XXAA
             void hyperdisplay::getCharInfo(uint8_t character, char_info_t * character_info)
             {
                 // This is the most basic font implementation, it only prints a monochrome character using the first color of the current window's current color sequence
@@ -1445,7 +1445,6 @@ hyperdisplay_dim_check_t hyperdisplay::enforceHWLimits(hd_extent_t * windowvar, 
         if( *hardwarevar > (pCurrentWindow->yMax) ){ high = true; *hardwarevar = pCurrentWindow->yMax; } // Compare to hardware coordinate limits of the window
         if( *hardwarevar < (pCurrentWindow->yMin) ){ low = true;  *hardwarevar = pCurrentWindow->yMin; } // Compare to hardware coordinate limits of the window
         if( *hardwarevar >= yExt ){ high = true; *hardwarevar = (yExt-1); }                              // Compare to hardware screen dimensions
-        if( *hardwarevar < 0 ){ low = true; *hardwarevar = 0; }                                          // Compare to hardware screen dimensions
     }
     else
     {
