@@ -12,10 +12,12 @@ char_info_t hyperdisplayDefaultCharacter; // The default character to use
 
 #if HYPERDISPLAY_USE_PRINT
    #if HYPERDISPLAY_INCLUDE_DEFAULT_FONT
-     #if defined(__has_include) &&  __has_include ( <avr/pgmspace.h> ) || defined NRF52840_XXAA
+       #if defined(__has_include) &&  __has_include ( <avr/pgmspace.h> ) || defined NRF52840_XXAA
          hd_font_extent_t hyperdisplayDefaultXloc[HYPERDISPLAY_DEFAULT_FONT_WIDTH*HYPERDISPLAY_DEFAULT_FONT_HEIGHT];
          hd_font_extent_t hyperdisplayDefaultYloc[HYPERDISPLAY_DEFAULT_FONT_WIDTH*HYPERDISPLAY_DEFAULT_FONT_HEIGHT];
-      #endif /* __has_include( <avr/pgmspace.h> ) */
+         hd_font_extent_t hyperdisplayDefaultXlocBlank[HYPERDISPLAY_DEFAULT_FONT_WIDTH*HYPERDISPLAY_DEFAULT_FONT_HEIGHT];
+         hd_font_extent_t hyperdisplayDefaultYlocBlank[HYPERDISPLAY_DEFAULT_FONT_WIDTH*HYPERDISPLAY_DEFAULT_FONT_HEIGHT];
+       #endif /* __has_include( <avr/pgmspace.h> ) */
    #endif
 #endif
 
@@ -217,11 +219,7 @@ void hyperdisplay::hwfillFromArray(hd_hw_extent_t x0, hd_hw_extent_t y0, hd_hw_e
     hyperdisplayFillFromArrayCallback(x0, y0, x1, y1, numPixels, data);
 }
 
-
-
-
-
-// Buffer writing functions - all buffers areread left-to-right and top to bottom. Width and height are specified in the associated window's settings. Coordinates are window coordinates
+// Buffer writing functions - all buffers are read left-to-right and top to bottom. Width and height are specified in the associated window's settings. Coordinates are window coordinates
 hd_pixels_t             hyperdisplay::wToPix( wind_info_t* wind, hd_hw_extent_t x0, hd_hw_extent_t y0)
 {
     if(wind == NULL){ return 0; } // Ideally we would have a better solution here...
@@ -344,7 +342,7 @@ void    hyperdisplay::swyline( hd_extent_t x0, hd_extent_t y0, hd_extent_t len, 
     }
 }
 
-void    hyperdisplay::swrectangle( hd_extent_t x0, hd_extent_t y0, hd_extent_t x1, hd_extent_t y1, bool filled, color_t data, hd_colors_t colorCycleLength, hd_colors_t startColorOffset, bool reverseGradient, bool gradientVertical)
+void hyperdisplay::swrectangle( hd_extent_t x0, hd_extent_t y0, hd_extent_t x1, hd_extent_t y1, bool filled, color_t data, hd_colors_t colorCycleLength, hd_colors_t startColorOffset, bool reverseGradient, bool gradientVertical)
 {
     // if(data == NULL){ return; }
     // if(colorCycleLength == 0){ return; }
@@ -425,7 +423,7 @@ void    hyperdisplay::swrectangle( hd_extent_t x0, hd_extent_t y0, hd_extent_t x
 
 }
 
-void    hyperdisplay::swfillFromArray( hd_extent_t x0, hd_extent_t y0, hd_extent_t x1, hd_extent_t y1, color_t data, hd_pixels_t numPixels,  bool Vh )
+void hyperdisplay::swfillFromArray( hd_extent_t x0, hd_extent_t y0, hd_extent_t x1, hd_extent_t y1, color_t data, hd_pixels_t numPixels,  bool Vh )
 {
     if(data == NULL){ return; }
     hd_pixels_t startColorOffset = 0;
@@ -737,7 +735,22 @@ void hyperdisplay::show( wind_info_t * wind ){ // Outputs the current window's b
         // Now write the character
         if(hyperdisplayDefaultCharacter.show)
         {
-            //fillFromArray(pCurrentWindow->cursorX, pCurrentWindow->cursorY, pCurrentWindow->cursorX+hyperdisplayDefaultCharacter.xDim, pCurrentWindow->cursorY+hyperdisplayDefaultCharacter.yDim, hyperdisplayDefaultCharacter.numPixels, hyperdisplayDefaultCharacter.data);
+            //fillFromArray(0, 0, wind->xMax - wind->xMin, wind->yMax - wind->yMin, wind->data, wind->numPixels, false); // Use horizontal mode
+            //fillFromArray(hd_extent_t x0, hd_extent_t y0, hd_extent_t x1, hd_extent_t y1, color_t data, hd_pixels_t numPixels, bool Vh)
+            //fillFromArray(pCurrentWindow->cursorX, pCurrentWindow->cursorY, pCurrentWindow->cursorX+hyperdisplayDefaultCharacter.xDim,
+            //pCurrentWindow->cursorY+hyperdisplayDefaultCharacter.yDim, hyperdisplayDefaultCharacter.data, hyperdisplayDefaultCharacter.numPixels, false);
+            // hyperdisplay::rectangle(hd_extent_t x0, hd_extent_t y0, hd_extent_t x1, hd_extent_t y1, bool filled, color_t data, hd_colors_t colorCycleLength, hd_colors_t startColorOffset, bool reverseGradient, bool gradientVertical)
+
+            if (pCurrentWindow->clearCharacterArea)
+            {
+                //rectangle(pCurrentWindow->cursorX , pCurrentWindow->cursorY, pCurrentWindow->cursorX + hyperdisplayDefaultCharacter.xDim,  pCurrentWindow->cursorY + hyperdisplayDefaultCharacter.yDim, true, (color_t) 0x00, NULL, NULL, NULL, true);
+                //rectangle(pCurrentWindow->cursorX , pCurrentWindow->cursorY, pCurrentWindow->cursorX + hyperdisplayDefaultCharacter.xDim,  pCurrentWindow->cursorY + hyperdisplayDefaultCharacter.yDim, true, NULL);
+                for(uint32_t indi = 0; indi < hyperdisplayDefaultCharacter.numPixelsBlank; indi++)
+                {
+                    pixel(((pCurrentWindow->cursorX)+*(hyperdisplayDefaultCharacter.xLocBlank + indi)), ((pCurrentWindow->cursorY)+*(hyperdisplayDefaultCharacter.yLocBlank + indi)), (color_t)&(colorBlank));
+                }
+            }
+
             for(uint32_t indi = 0; indi < hyperdisplayDefaultCharacter.numPixels; indi++)
             {
                 pixel(((pCurrentWindow->cursorX)+*(hyperdisplayDefaultCharacter.xLoc + indi)), ((pCurrentWindow->cursorY)+*(hyperdisplayDefaultCharacter.yLoc + indi)), NULL, 1, 0);
@@ -764,6 +777,8 @@ void hyperdisplay::show( wind_info_t * wind ){ // Outputs the current window's b
                 // Link the default cordinate arrays
                 character_info->xLoc = hyperdisplayDefaultXloc;
                 character_info->yLoc = hyperdisplayDefaultYloc;
+                character_info->xLocBlank = hyperdisplayDefaultXlocBlank;
+                character_info->yLocBlank = hyperdisplayDefaultYlocBlank;
 
                 character_info->xDim = 5;
                 character_info->yDim = 8;
@@ -793,7 +808,9 @@ void hyperdisplay::show( wind_info_t * wind ){ // Outputs the current window's b
                 uint8_t values[5]; // Holds the 5 bytes for the character
                 uint16_t offset = 6 + 5 * (character - 0);
                 character_info->numPixels = 0;
-                uint16_t n = 0;
+                character_info->numPixelsBlank = 0;
+                uint16_t n0 = 0;
+                uint16_t n1 = 0;
                 for(uint8_t indi = 0; indi < 5; indi++)
                 {
                     values[indi] = pgm_read_byte(font5x7 + offset + indi);
@@ -802,9 +819,14 @@ void hyperdisplay::show( wind_info_t * wind ){ // Outputs the current window's b
                         if(values[indi] & (0x01 << indj))
                         {
                             character_info->numPixels++;
-                            *(character_info->xLoc + n) = (hd_font_extent_t)indi;
-                            *(character_info->yLoc + n) = (hd_font_extent_t)indj;
-                            n++;
+                            *(character_info->xLoc + n0) = (hd_font_extent_t)indi;
+                            *(character_info->yLoc + n0) = (hd_font_extent_t)indj;
+                            n0++;
+                        } else {
+                            character_info->numPixelsBlank++;
+                            *(character_info->xLocBlank + n1) = (hd_font_extent_t)indi;
+                            *(character_info->yLocBlank + n1) = (hd_font_extent_t)indj;
+                            n1++;
                         }
                     }
                 }

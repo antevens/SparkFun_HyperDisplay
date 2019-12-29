@@ -74,17 +74,21 @@ const bool hdX = false;
 const bool hdY = true;
 const bool hdW = true;
 const bool hdH = false;
+const color_t colorBlank = {0x00};
 
 typedef struct character_info{
-        color_t                 data;      // The data that is used to fill the character frame
-        hd_font_extent_t*       xLoc;      // x location data relative to the upper left-corner of the character area
-        hd_font_extent_t*       yLoc;      // y location data relative to the upper left-corner of the character area
-    hd_font_extent_t    xDim;              // The maximum value of xLoc
-    hd_font_extent_t    yDim;              // The maximum value of yLoc - also the number of pixels to move down for characters that cause new lines
-    hd_pixels_t                 numPixels; // The number of color_t types that pdata points to
-        bool                    show;      // Whether or not to actually show the character
-    bool                causesNewline;     // This indicates if the given chracter is meant to cause a newline
-}char_info_t;                              // Character information structure for placing pixels in a window
+    color_t           data;           // The data that is used to fill the character frame
+    hd_font_extent_t* xLoc;           // x location data relative to the upper left-corner of the character area
+    hd_font_extent_t* yLoc;           // y location data relative to the upper left-corner of the character area
+    hd_font_extent_t* xLocBlank;      // x location data relative to the upper left-corner of the character area
+    hd_font_extent_t* yLocBlank;      // y location data relative to the upper left-corner of the character area
+    hd_font_extent_t  xDim;           // The maximum value of xLoc
+    hd_font_extent_t  yDim;           // The maximum value of yLoc - also the number of pixels to move down for characters that cause new lines
+    hd_pixels_t       numPixels;      // The number of color_t types that pdata points to
+    hd_pixels_t       numPixelsBlank; // The number of color_t types that pdata points to
+    bool              show;           // Whether or not to actually show the character
+    bool              causesNewline;  // This indicates if the given chracter is meant to cause a newline
+}char_info_t;                         // Character information structure for placing pixels in a window
 
 typedef struct window_info{
     hd_hw_extent_t  xMin;                    // FYI window min/max use the hardware frame of reference
@@ -96,6 +100,7 @@ typedef struct window_info{
     hd_extent_t     xReset;                  // Where the cursor goes on a reset location (window coordinates)
     hd_extent_t     yReset;                  // Where the cursor goes on a reset location (window coordinates)
     char_info_t     lastCharacter;           // Information about the last character written.
+    bool            clearCharacterArea;      // Clear any area around a character to "overwrite" existing characters
     color_t         currentSequenceData;     // The data that is used as the default color sequence
     hd_colors_t     currentColorCycleLength; // The default color sequence number of pixels
     hd_colors_t     currentColorOffset;      // The current offset
