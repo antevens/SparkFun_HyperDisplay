@@ -180,7 +180,7 @@ class hyperdisplay : public Print{
         void setWindowColorSequence(wind_info_t * wind, color_t data = NULL, hd_colors_t colorCycleLength = 1, hd_colors_t startColorOffset = 0);    // Sets up a color sequence for the window
         void setCurrentWindowColorSequence(color_t data = NULL, hd_colors_t colorCycleLength = 1, hd_colors_t startColorOffset = 0); // Sets up a color sequence for the current window
         int setWindowMemory(wind_info_t * wind, color_t data = NULL, hd_pixels_t numPixels = 0, uint8_t bpp = 0, bool allowDynamic = false);
-        void setCurrentWindowMemory( color_t data = NULL, hd_pixels_t numPixels = 0, uint8_t bpp = 0, bool allowDynamic = false);
+        int setCurrentWindowMemory( color_t data = NULL, hd_pixels_t numPixels = 0, uint8_t bpp = 0, bool allowDynamic = false);
 
         // Buffer and Show
         void buffer(wind_info_t * wind = NULL); // Puts the current window into buffer mode - drawing commands are performed on the current window's data buffer - if available
